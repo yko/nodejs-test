@@ -43,7 +43,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const messages = "${{join(steps.run_tests.outputs.*, '\n\n')}}"
+            const messages = "${{join(steps.*.outputs.*, '\n\n')}}"
             await github.rest.repos.createCommitComment({
               ...context.repo,
               commit_sha: context.sha,
