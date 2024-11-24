@@ -16,31 +16,26 @@ jobs:
         with:
           script: |
             const errors = [];
-            console.log("Test 1");
             if (context.payload.forced) {
               errors.push(
                 `Root Cause Analysis (RCA) is skipped due to a forced push. Please use a regular push to enable RCA.`
               );
             }
-            console.log("Test 2");
             if (context.payload.repository.private) {
               errors.push(
                 `RCA workflow unavailable for private repositories. Set the repository to 'Public' and re-merge changes to enable RCA.`
               );
             }
-            console.log(context);
-            if (context.runAttempt > 1) {
+            if (${{github.run_attempt}} > 1) {
               errors.push(
-                `This is a re-run #${context.runAttempt}. RCA workflow unavailable for workflow re-runs on the same commit sha.`
+                `This is a re-run #${{github.run_attempt}}. RCA workflow unavailable for workflow re-runs on the same commit sha.`
               );
             }
-            console.log("Test 4566");
 
             if (errors.length == 0) {
               process.exit(0);
             }
 
-            console.log("Comment");
             await github.rest.repos.createCommitComment({
               ...context.repo,
               commit_sha: context.sha,
