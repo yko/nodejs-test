@@ -11,50 +11,50 @@ jobs:
       contents: write
     steps:
       - name: Declare RCA skipped - forced push
+        id: forced-push
         uses: actions/github-script@v7
-        if: 1 || github.event.forced
         with:
           script: |
-            const message = `**Resurgo.AI:** Root Cause Analysis (RCA) is skipped due to a forced push. Please use a regular push to enable RCA.`;
-            core.setOutput('message', message);
-            process.exit(1);
+            const errors = [];
+            console.log("Test 1");
+            if (context.payload.forced) {
+              errors.push(
+                `Root Cause Analysis (RCA) is skipped due to a forced push. Please use a regular push to enable RCA.`
+              );
+            }
+            console.log("Test 2");
+            if (context.payload.repository.private) {
+              errors.push(
+                `RCA workflow unavailable for private repositories. Set the repository to 'Public' and re-merge changes to enable RCA.`
+              );
+            }
+            console.log("Test 3");
+            if (context.runNumber > 1) {
+              errors.push(
+                `This is a re-run #${context.runNumber}. RCA workflow unavailable for workflow re-runs on the same commit sha.`
+              );
+            }
+            console.log("Test 4566");
 
-      - name: Declare RCA skipped - private repo
-        if: github.event.repository.private
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const message = `**Resurgo.AI:** RCA workflow unavailable for private repositories.\n\n` +
-                            `RCA workflow unavailable for private repositories. Set the repository to 'Public' and re-merge changes to enable RCA.`;
-            core.setOutput('message', message);
-            process.exit(1);
+            if (errors.length == 0) {
+              process.exit(0);
+            }
 
-      - name: Declare RCA skipped - workflow re-run
-        if: github.run_attempt != 1
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const message = `**Resurgo.AI:** RCA workflow unavailable for workflow re-runs.`;
-            core.setOutput('message', message);
-            process.exit(1);
-
-      - name: Validation Error Handler
-        if: failure() && !cancelled()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const messages = "${{join(steps.*.outputs.*, '\n\n')}}"
+            console.log("Comment");
             await github.rest.repos.createCommitComment({
               ...context.repo,
               commit_sha: context.sha,
-              body: messages,
+              body: `**Resurgo.AI:** ⚠️  the following errors prevented RCA:\n\n\n\n` + errors.join("\n\n")
             });
-            console.error(messages);
+
+            console.error(errors);
+
             await core.summary
-              .addHeading('⚠️. RCA initiation failed')
-              .addRaw(messages)
+              .addHeading('⚠️  RCA initiation failed')
+              .addRaw(errors.join("\n\n"))
               .addRaw("\n\nNo further actions will be taken for this deployment.")
               .write();
+
             process.exit(1);
 
   deploy:
