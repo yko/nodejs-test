@@ -28,7 +28,7 @@ jobs:
                 `RCA workflow unavailable for private repositories. Set the repository to 'Public' and re-merge changes to enable RCA.`
               );
             }
-            console.log("Test 3: " + context.runAttempt);
+            console.log(context);
             if (context.runAttempt > 1) {
               errors.push(
                 `This is a re-run #${context.runAttempt}. RCA workflow unavailable for workflow re-runs on the same commit sha.`
